@@ -292,6 +292,8 @@
                 }
 
                 $this->save();
+
+                return $data;
                 
             }
             catch (\Exception $e)
