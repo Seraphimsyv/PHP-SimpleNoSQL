@@ -40,7 +40,7 @@
          * Сохранение изменений данных
          * 
          */
-        protected function save() 
+        public function save() 
         {
             // Вставка данных в файл и сохранение
             file_put_contents($this->file, json_encode($this->data));
@@ -175,7 +175,7 @@
          * $where = [
          *      [
          *          "key" => "uid",
-         *          "format" => "? > 10 and ? < 34"
+         *          "format" => "%s > 10 and %s < 34"
          *      ]
          * ];
          * 
@@ -197,15 +197,20 @@
 
                     if($where != null)
                     {
-                        $is_continue = true;
+                        $where_total_count = count($where);
+                        $where_curent_count = 0;
                         
                         foreach($where as $target => $exp)
                         {
-                            $prepare_exp = 'if(' . sprintf($exp['format'], $value[$exp["key"]]) . ') $is_continue = false;';
+                            $prepare_exp = 'if(' . sprintf($exp['format'], $value[$exp["key"]]) . ') $where_curent_count += 1;';
+                            if($exp['key']=="members"){
+                                echo $prepare_exp;
+                                exit();
+                            }
                             eval($prepare_exp);
                         }
 
-                        if($is_continue == true) continue;
+                        if($where_curent_count != $where_total_count) continue;
 
                     }
 
@@ -261,7 +266,7 @@
                 {
                     foreach ($data as $row) {
 
-                        if(isset($unique) and $unique == true)
+                        if($unique == true)
                         {
                             $unique = rand(100000, 999999);
                             $row['uid'] = $unique;
@@ -349,9 +354,16 @@
 
                 if(!array_key_exists($unique, $this->data[$table_name])) throw new \Exception("Document not exists!");
 
-                unset($this->data[$table_name][$unique]);
+                foreach($this->data[$table_name] as $key => $value)
+                {
+                    if($value['uid'] == $unique)
+                    {
+                        unset($this->data[$table_name][$key]);                        
+                    }
+                }
 
                 $this->save();
+
 
                 return true;
 
